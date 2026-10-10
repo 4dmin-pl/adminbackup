@@ -1,0 +1,16 @@
+<Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<?define Platform  = "x64"?>
+	<?define shared_data_dir = "$(var.Staging)"?>
+	<?define ProductID="9632a94f-8bc1-4a96-8ec3-58de529d6f2f"?>
+	<?if $(var.Platform)=x64 ?>
+		<?define ProgramFilesFolder="ProgramFiles64Folder"?>		
+		<?define ComponentID="603FFA7C-7D9C-554D-AD46-07DAB1E94BA2"?>
+		<?define isx64="always64"?>
+		<?define datadir="$(var.Staging)"?>
+	<?else?>
+		<?define ProgramFilesFolder="ProgramFilesFolder"?>
+		<?define ComponentID="6B836FE1-CDBE-5243-A009-2074A5BA92C1"?>
+		<?define isx64="always32"?>
+		<?define datadir="data"?>
+	<?endif?>
+</Include>

@@ -1,0 +1,365 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util" xmlns:firewall="http://wixtoolset.org/schemas/v4/wxs/firewall">
+	<?include adminbackup.wxi?>
+	<Package Name="AdminBackup" Language="1033" Version="$(var.Version)" Manufacturer="A.D.M.I.N (4dmin.pl)" UpgradeCode="4C57D549-8A81-5E12-B12D-740EBB38D0C8" InstallerVersion="301"><SummaryInformation Description="AdminBackup - kopie zapasowe A.D.M.I.N" Manufacturer="A.D.M.I.N (4dmin.pl)" />
+			 
+	<MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+	
+    <Media Id="1" Cabinet="urbackup.cab" EmbedCab="yes" />
+	
+	<?if $(var.Platform)=x64 ?>
+	<Launch Condition="Msix64" Message="You are attempting to run the 32-bit installer on a 64-bit version of Windows." />
+	<?endif?>
+	
+	
+	<util:CloseApplication Id="CloseUrBackupClient" CloseMessage="yes" ElevatedCloseMessage="no" RebootPrompt="no" Target="UrBackupClient.exe" />
+
+						   
+    
+		
+	 
+	<WixVariable Id="WixUIDialogBmp" Value="$(var.Brand)\WixUIDialogBmp.bmp" />
+	<WixVariable Id="WixUIBannerBmp" Value="$(var.Brand)\WixUIBannerBmp.bmp" />
+	
+	<Property Id="WIXUI_INSTALLDIR" Value="URBACKUPDIR" />
+	<UIRef Id="WixUI_InstallDirCustom" />
+	
+	<Icon Id="backup_ok_ico" SourceFile="$(var.shared_data_dir)\backup-ok.ico" />
+	<Property Id="ARPPRODUCTICON" Value="backup_ok_ico" />
+	<Property Id="ARPHELPLINK" Value="https://4dmin.pl/" />
+	
+	<Property Id="WixShellExecTarget" Value="[#UrBackupClient.exe]" />
+	<CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_X86" />
+	<CustomAction Id="UninstallShellKeys" Execute="deferred" Return="asyncWait" ExeCommand="deleteshellkeys" FileRef="UrBackupClient.exe" />
+	
+    <Feature Id="urbackup_client" Title="AdminBackup" Level="1">
+      <ComponentRef Id="urbackup_client" />
+	  <ComponentGroupRef Id="CommonFiles" />
+	  <ComponentRef Id="InstallService" />
+	  <ComponentRef Id="UrBackupClientAutostart" />
+    </Feature>
+
+  
+      <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
+        <Directory Id="URBACKUPDIR" Name="AdminBackup">
+			<Component Id="urbackup_client" Guid="$(var.ComponentID)" Bitness="$(var.isx64)">
+					<File Id="args" Name="args.txt" DiskId="1" Source="$(var.shared_data_dir)\args.txt" />
+					<File Id="prefilebackup_new.bat" DiskId="1" Name="prefilebackup_new.bat" Source="$(var.shared_data_dir)\prefilebackup_new.bat" />
+					<File Id="scrub_disk.bat" DiskId="1" Name="scrub_disk.bat" Source="$(var.shared_data_dir)\scrub_disk.bat" />
+					<File Id="cryptoplugin.dll" DiskId="1" Name="cryptoplugin.dll" Source="$(var.datadir)\cryptoplugin.dll" />
+					<File Id="fileservplugin.dll" DiskId="1" Name="fileservplugin.dll" Source="$(var.datadir)\fileservplugin.dll" />
+					<File Id="fsimageplugin.dll" DiskId="1" Name="fsimageplugin.dll" Source="$(var.datadir)\fsimageplugin.dll" />
+					<File Id="urbackup.dll" DiskId="1" Name="urbackup.dll" Source="$(var.datadir)\urbackup.dll" />
+					<File Id="UrBackupClient.exe" DiskId="1" Name="UrBackupClient.exe" Source="$(var.datadir)\UrBackupClient.exe" />
+					<File Id="UrBackupClient_cmd.exe" DiskId="1" Name="UrBackupClient_cmd.exe" Source="$(var.datadir)\UrBackupClient_cmd.exe" />
+					<File Id="crt_concrt140_dll" DiskId="1" Name="concrt140.dll" Source="$(var.CrtDir)\concrt140.dll" />
+					<File Id="crt_msvcp140_dll" DiskId="1" Name="msvcp140.dll" Source="$(var.CrtDir)\msvcp140.dll" />
+					<File Id="crt_msvcp140_1_dll" DiskId="1" Name="msvcp140_1.dll" Source="$(var.CrtDir)\msvcp140_1.dll" />
+					<File Id="crt_msvcp140_2_dll" DiskId="1" Name="msvcp140_2.dll" Source="$(var.CrtDir)\msvcp140_2.dll" />
+					<File Id="crt_msvcp140_atomic_wait_dll" DiskId="1" Name="msvcp140_atomic_wait.dll" Source="$(var.CrtDir)\msvcp140_atomic_wait.dll" />
+					<File Id="crt_msvcp140_codecvt_ids_dll" DiskId="1" Name="msvcp140_codecvt_ids.dll" Source="$(var.CrtDir)\msvcp140_codecvt_ids.dll" />
+					<File Id="crt_vccorlib140_dll" DiskId="1" Name="vccorlib140.dll" Source="$(var.CrtDir)\vccorlib140.dll" />
+					<File Id="crt_vcruntime140_dll" DiskId="1" Name="vcruntime140.dll" Source="$(var.CrtDir)\vcruntime140.dll" />
+					<File Id="crt_vcruntime140_1_dll" DiskId="1" Name="vcruntime140_1.dll" Source="$(var.CrtDir)\vcruntime140_1.dll" />
+					<File Id="crt_vcruntime140_threads_dll" DiskId="1" Name="vcruntime140_threads.dll" Source="$(var.CrtDir)\vcruntime140_threads.dll" />
+					
+			</Component>
+			
+            <Component Id="InstallService" Guid="FBE5843D-A29F-5372-84FB-48FC16B2906D" Bitness="$(var.isx64)">
+				<File Id="WindowsService" Name="UrBackupClientBackend.exe" Source="$(var.datadir)\UrBackupClientBackend.exe" KeyPath="yes">
+					<firewall:FirewallException Id="ServiceFirewallException" Name="AdminBackup" Scope="any" Profile="all" />
+				</File>
+				  
+				  
+				  
+				<ServiceInstall Id="ServiceInstaller" Type="ownProcess" Vital="yes" Name="UrBackupClientBackend" DisplayName="AdminBackup - usługa kopii zapasowych" Description="Kopie zapasowe plików i obrazów dysków (A.D.M.I.N, 4dmin.pl)" Start="auto" Account="LocalSystem" ErrorControl="ignore" Interactive="no">
+					</ServiceInstall>
+					<ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" Name="UrBackupClientBackend" Wait="yes" />
+				
+			</Component>
+			
+        </Directory>
+      </Directory>
+    </Package>
+  
+  <Fragment>
+	<DirectoryRef Id="URBACKUPDIR">
+		<Component Id="cmp93F292ADAF785F399E42E4F60E954A12" Guid="14C1719A-A46A-5A27-BF47-A14E600DAF92" Bitness="$(var.isx64)">
+                <File Id="fil6903CF037991ECFEDD00F4EC883D55AD" KeyPath="yes" Source="$(var.shared_data_dir)\backup-bad.ico" />
+            </Component>
+            <Component Id="cmpA3688A751E01CECC3FC213B9110D8650" Guid="C977E339-A2B9-58C7-A3E8-ADEB96C32E33" Bitness="$(var.isx64)">
+                <File Id="fil69521D7DB4FE874627D88AD1977BBD48" KeyPath="yes" Source="$(var.shared_data_dir)\backup-ok.ico" />
+            </Component>
+            <Component Id="cmp743471C3E6B3C2A36D480B78348AB71A" Guid="546279F5-EF67-5AF8-AD4A-448ECDC2572E" Bitness="$(var.isx64)">
+                <File Id="filBD83A58B9BFC14A227C27DF1EA8A063D" KeyPath="yes" Source="$(var.shared_data_dir)\backup-progress-pause.ico" />
+            </Component>
+            <Component Id="cmpA506A755F6439AB0DED04F16F9519F36" Guid="5A6045FC-21AC-5179-BC50-BBDB0310289B" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA690" KeyPath="yes" Source="$(var.shared_data_dir)\backup-progress.ico" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F37" Guid="94B7CBEE-ECA3-56B6-BF2B-4B8CA5E7B6E3" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA691" KeyPath="yes" Source="$(var.shared_data_dir)\backup-no-server.ico" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F38" Guid="3F1CAA6C-CF7D-54AC-AABF-00A15BAC931D" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA692" KeyPath="yes" Source="$(var.shared_data_dir)\backup-indexing.ico" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F39" Guid="7CA1CFBF-3A55-580E-B48D-8D4FAEB820C6" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA693" KeyPath="yes" Source="$(var.shared_data_dir)\backup-no-recent.ico" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F40" Guid="5AE6374C-FAF3-51CF-9C19-CD3AF371E41B" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA694" KeyPath="yes" Source="$(var.shared_data_dir)\fa-copy.png" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F41" Guid="E7058F46-2A6C-5F55-BEDE-C06AA902F985" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA695" KeyPath="yes" Source="$(var.shared_data_dir)\fa-home.png" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F42" Guid="A92ACA2C-5EE7-5A2E-B7FC-F0D9BD31F2DB" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA696" KeyPath="yes" Source="$(var.shared_data_dir)\fa-lock.png" />
+            </Component>
+			<Component Id="cmpA506A755F6439AB0DED04F16F9519F43" Guid="F442E0EA-2FA7-55E2-B474-22AACBB59173" Bitness="$(var.isx64)">
+                <File Id="fil52333B0481A4FDF2FF93D4E4B10DA697" KeyPath="yes" Source="$(var.shared_data_dir)\fa-road.png" />
+            </Component>
+            <Component Id="cmp6F67E569C00875CB92A3B5C5C8CE8852" Guid="115018C2-2BB2-58C5-8C54-D99E687F7D48" Bitness="$(var.isx64)">
+                <File Id="fil8F2E72C5A068C923F426772A12CB28F5" KeyPath="yes" Source="$(var.shared_data_dir)\curr_version.txt" />
+            </Component>
+            <Component Id="cmpABF00809AEDF68FD55CB21FD6A79E6F1" Guid="0564AC03-6BD2-5B94-A07D-4BF2059CB93C" Bitness="$(var.isx64)">
+                <File Id="fil537298D957BE70C2055CF77D449FB765" KeyPath="yes" Source="$(var.shared_data_dir)\info.txt" />
+            </Component>
+            <Component Id="cmpA3C8DD197BD7132D070BA95A0D0737A9" Guid="83BB0394-3EAB-5038-8A85-D2E3967C1377" Bitness="$(var.isx64)">
+                <File Id="fil12A13679A0DE648F394113047E40AC74" KeyPath="yes" Source="$(var.shared_data_dir)\license.txt" />
+            </Component>
+            <Component Id="cmpB61E9C9B65B365882BCDEC02FD186348" Guid="E60A7E00-4FD2-50E5-A3F8-5A3E50731738" Bitness="$(var.isx64)">
+                <File Id="fil546F0226153E9851C05E1F76661B2DF6" KeyPath="yes" Source="$(var.shared_data_dir)\logo1.png" />
+            </Component>
+            <Component Id="cmpCF4899F41946CAE795F36EC0B9414B31" Guid="D6CEADB8-F9D0-540B-A93C-3953AC0D6D67" Bitness="$(var.isx64)">
+                <File Id="filBA1AFDB5114DD60BEDBD3377F3DE7D06" KeyPath="yes" Source="$(var.shared_data_dir)\updates_h.dat" />
+            </Component>
+            <Component Id="cmp37A94814CB169DB3ED2881E715547442" Guid="51303BD9-4286-57B3-9B28-76024757D02D" Bitness="$(var.isx64)">
+                <File Id="filAD7AA45493CFD8B8331044CD7393799C" KeyPath="yes" Source="$(var.shared_data_dir)\urbackup_ecdsa409k1.pub" />
+            </Component>
+			<Directory Id="dir77A47C9F143A7502466C548C9FCBAD09" Name="lang">
+				<Directory Id="dir77A47C9F143A7502466C548C9FCBAD08" Name="de">
+					<Component Id="cmp3ADCE127861514104F3F9990F4DCEE67" Guid="35CB4630-8D21-5C2F-BA2F-7287A19A0E6F" Bitness="$(var.isx64)">
+						<File Id="filE01BABC064CA6E3C82340AF8F7CE898E" KeyPath="yes" Source="$(var.shared_data_dir)\lang\de\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911522" Name="fr">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A0B" Guid="66B464B6-DD52-555A-98F5-A38C17BB8414" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B8" KeyPath="yes" Source="$(var.shared_data_dir)\lang\fr\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911523" Name="ru">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A0C" Guid="C6C3D0C0-A049-5D77-AAA5-0436BD7BF04E" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B9" KeyPath="yes" Source="$(var.shared_data_dir)\lang\ru\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911524" Name="es">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A1C" Guid="4D73B867-56EA-5CAA-8E4F-47F3C81FF147" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68BA" KeyPath="yes" Source="$(var.shared_data_dir)\lang\es\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911525" Name="zh_TW">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A2C" Guid="1381AC91-2DA7-5573-B41E-673CD20FF665" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B0" KeyPath="yes" Source="$(var.shared_data_dir)\lang\zh_TW\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911526" Name="zh_CN">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A3C" Guid="6586E116-FBB9-5170-A0B7-392D04F030E1" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B1" KeyPath="yes" Source="$(var.shared_data_dir)\lang\zh_CN\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911527" Name="pt_BR">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A4C" Guid="A1C182B4-F876-50CA-BA6F-B5D0AA428AAA" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B2" KeyPath="yes" Source="$(var.shared_data_dir)\lang\pt_BR\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911528" Name="it">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A5C" Guid="4E492882-A268-59D8-A771-97E6D490905F" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B3" KeyPath="yes" Source="$(var.shared_data_dir)\lang\it\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911529" Name="pl">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A6C" Guid="A68A4119-B236-5B68-AE7B-466D2528438E" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B4" KeyPath="yes" Source="$(var.shared_data_dir)\lang\pl\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911530" Name="sk">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A7C" Guid="254D0A28-B714-522C-B79B-51620C56659B" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B5" KeyPath="yes" Source="$(var.shared_data_dir)\lang\sk\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911531" Name="uk">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A8C" Guid="0D014FAD-5C2D-509A-A7A7-AC8330AA3346" Bitness="$(var.isx64)">
+						<File Id="fil4AAB0F81E48E2917698958995EBB68B6" KeyPath="yes" Source="$(var.shared_data_dir)\lang\uk\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911532" Name="da">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0A9C" Guid="D5497D3E-AFEE-5876-B064-36C555101126" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68B7" KeyPath="yes" Source="$(var.shared_data_dir)\lang\da\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911533" Name="nl">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B0C" Guid="EBF98DBB-FB89-5CF1-8219-125A71B2BD6E" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68B8" KeyPath="yes" Source="$(var.shared_data_dir)\lang\nl\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911534" Name="fa">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B1C" Guid="9E1145A7-9756-55CC-8F2C-35E445127FF4" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68B9" KeyPath="yes" Source="$(var.shared_data_dir)\lang\fa\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911535" Name="cs">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B2C" Guid="CE75C680-6CF3-59BC-98EA-2571A3E20B58" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68BA" KeyPath="yes" Source="$(var.shared_data_dir)\lang\cs\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911536" Name="tr">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B3C" Guid="4017A8F1-61D4-520E-8926-42834013CD80" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68BB" KeyPath="yes" Source="$(var.shared_data_dir)\lang\tr\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911537" Name="et">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B4C" Guid="FD7BF530-722F-5A25-AF57-233FA524F190" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68BC" KeyPath="yes" Source="$(var.shared_data_dir)\lang\et\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911538" Name="no_NO">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B5C" Guid="A2EF8F5A-88DB-5C65-A48A-535584257444" Bitness="$(var.isx64)">
+						<File Id="fil4CAB0F81E48E2917698958995EBB68BD" KeyPath="yes" Source="$(var.shared_data_dir)\lang\no_NO\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911539" Name="sb">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B6C" Guid="74FF2943-8302-598A-A742-0CD949054F02" Bitness="$(var.isx64)">
+						<File Id="fil0CAB0F81E48E2917698958995EBB68B0" KeyPath="yes" Source="$(var.shared_data_dir)\lang\sb\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911540" Name="pt">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B7C" Guid="B362DE67-4E52-52C3-8649-C4222E2DC173" Bitness="$(var.isx64)">
+						<File Id="fil0CAB0F81E48E2917698958995EBB68B1" KeyPath="yes" Source="$(var.shared_data_dir)\lang\pt\urbackup.mo" />
+					</Component>
+				</Directory>
+				<Directory Id="dir72226116A8527C99EDF529487A911541" Name="ja">
+					<Component Id="cmp1BD08D74C1565C73FA7F252C3D5B0B8C" Guid="53849D0D-BF33-52EA-A4A2-5D726C5C9B76" Bitness="$(var.isx64)">
+						<File Id="fil0CAB0F81E48E2917698958995EBB68B2" KeyPath="yes" Source="$(var.shared_data_dir)\lang\ja\urbackup.mo" />
+					</Component>
+				</Directory>
+			</Directory>
+            <Directory Id="dir5CC00D708A190EEA836296A3646DFAF2" Name="urbackup">
+                <Directory Id="dirEC170182D8F256F50CFEE910C4E436EA" Name="data">
+                    <Component Id="cmp146035BB0A33B65BB459A78C1BA9938B" Guid="F6B0BB69-F65B-5C6D-8AEE-C9EF8DF51965" Bitness="$(var.isx64)">
+                        <File Id="fil6E1D9D3FE5220570D063E923B17CDBF3" KeyPath="yes" Source="$(var.shared_data_dir)\urbackup\data\dummy" />
+                    </Component>
+                </Directory>
+            </Directory>
+		</DirectoryRef>
+	</Fragment>
+  
+  <Fragment>
+        <ComponentGroup Id="CommonFiles">
+            <ComponentRef Id="cmp93F292ADAF785F399E42E4F60E954A12" />
+            <ComponentRef Id="cmpA3688A751E01CECC3FC213B9110D8650" />
+            <ComponentRef Id="cmp743471C3E6B3C2A36D480B78348AB71A" />
+            <ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F36" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F37" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F38" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F39" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F40" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F41" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F42" />
+			<ComponentRef Id="cmpA506A755F6439AB0DED04F16F9519F43" />
+            <ComponentRef Id="cmp6F67E569C00875CB92A3B5C5C8CE8852" />
+            <ComponentRef Id="cmpABF00809AEDF68FD55CB21FD6A79E6F1" />
+            <ComponentRef Id="cmpA3C8DD197BD7132D070BA95A0D0737A9" />
+            <ComponentRef Id="cmpB61E9C9B65B365882BCDEC02FD186348" />
+            <ComponentRef Id="cmpCF4899F41946CAE795F36EC0B9414B31" />
+            <ComponentRef Id="cmp37A94814CB169DB3ED2881E715547442" />
+            <ComponentRef Id="cmp3ADCE127861514104F3F9990F4DCEE67" />
+            <ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A0B" />
+            <ComponentRef Id="cmp146035BB0A33B65BB459A78C1BA9938B" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A0C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A1C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A2C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A3C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A4C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A5C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A6C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A7C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A8C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0A9C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B0C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B1C" />			
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B2C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B3C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B4C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B5C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B6C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B7C" />
+			<ComponentRef Id="cmp1BD08D74C1565C73FA7F252C3D5B0B8C" />
+        </ComponentGroup>
+    </Fragment>
+	
+	<Fragment>
+	 <DirectoryRef Id="URBACKUPDIR">
+		<Component Id="UrBackupClientAutostart" Guid="9F3EFDFA-7ABF-5412-8655-3246F7B06BEF" Bitness="$(var.isx64)">
+		<RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run">
+            <RegistryValue Type="string" Name="UrBackupClient" Value="[URBACKUPDIR]UrBackupClient.exe" />
+        </RegistryKey>
+		<RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsBackup">
+            <RegistryValue Type="integer" Name="DisableMonitoring" Value="1" />
+        </RegistryKey>
+	  </Component>
+	  </DirectoryRef>
+	</Fragment>
+  
+	<Fragment>
+        <UI Id="WixUI_InstallDirCustom">
+            <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+            <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+            <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+            <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+            <Property Id="WixUI_Mode" Value="InstallDir" />
+
+            <DialogRef Id="BrowseDlg" />
+            <DialogRef Id="DiskCostDlg" />
+            <DialogRef Id="ErrorDlg" />
+            <DialogRef Id="FatalError" />
+            <DialogRef Id="FilesInUse" />
+            <DialogRef Id="MsiRMFilesInUse" />
+            <DialogRef Id="PrepareDlg" />
+            <DialogRef Id="ProgressDlg" />
+            <DialogRef Id="ResumeDlg" />
+            <DialogRef Id="UserExit" />
+            
+            <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath_$(sys.BUILDARCHSHORT)" Order="3" />
+            <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4" Condition="WIXUI_INSTALLDIR_VALID&lt;&gt;&quot;1&quot;" />
+
+            <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
+			<Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="NOT Installed" />
+
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Condition="NOT Installed" />
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="Installed AND PATCH" />
+
+            <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" />
+            <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1" />
+            <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath_$(sys.BUILDARCHSHORT)" Order="2" Condition="NOT WIXUI_DONTVALIDATEPATH" />
+            <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3" Condition="NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID&lt;&gt;&quot;1&quot;" />
+            <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4" Condition="WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID=&quot;1&quot;" />
+            <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1" />
+            <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2" />
+            
+            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1" Condition="NOT Installed" />
+            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2" Condition="Installed AND NOT PATCH" />
+            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" Condition="Installed AND PATCH" />
+
+            <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg" />
+
+            <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg" />
+            <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg" />
+            <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" />
+
+            <Property Id="ARPNOMODIFY" Value="1" />
+        </UI>
+
+        <UIRef Id="WixUI_Common" />
+    </Fragment>
+	
+  
+</Wix>
