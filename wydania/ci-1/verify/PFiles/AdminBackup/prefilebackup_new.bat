@@ -1,1 +1,0 @@
-:: Commands in this file will be executed before each incremental or full file backup
