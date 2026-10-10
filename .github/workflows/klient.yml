@@ -10,6 +10,7 @@ on:
     tags: ["v*"]
 
 env:
+  PYTHONUTF8: "1"  # konsola runnera Windows = cp1252, a komunikaty brand.py są po polsku
   URBACKUP_VERSION: "2.5.32"
   URBACKUP_MSI_SHA256: "f1d18e164bb69036aa9f4ca62d6e947c7c1859f98035230c73dbe906a17692aa"
 
