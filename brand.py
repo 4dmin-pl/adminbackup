@@ -37,8 +37,8 @@ def render(svg, width):
     return im.crop(im.getbbox())
 
 
-def biale(im):
-    out = Image.new("RGBA", im.size, (255, 255, 255, 255))
+def kolor(im, rgb):
+    out = Image.new("RGBA", im.size, rgb + (255,))
     out.putalpha(im.getchannel("A"))
     return out
 
@@ -48,7 +48,7 @@ def ikona(size=256, plakietka=None):
     im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.rounded_rectangle((0, 0, size - 1, size - 1), radius=size // 5, fill=TLO)
-    znak = biale(render("znak.svg", size))
+    znak = kolor(render("znak.svg", size), (255, 255, 255))
     znak.thumbnail((int(size * 0.68), int(size * 0.68)), Image.LANCZOS)
     im.alpha_composite(znak, ((size - znak.width) // 2, (size - znak.height) // 2))
     if plakietka:
@@ -58,16 +58,37 @@ def ikona(size=256, plakietka=None):
     return im
 
 
+PODPIS = "by Karol Wojewski"
+PODPIS_FONT = "C:/Windows/Fonts/seguili.ttf"  # Segoe UI Light Italic, jak w AdminDesk; render do bitmapy, fontu nie dystrybuujemy
+
+
+def logo(rgb, height):
+    """Napis ADMIN + „by Karol Wojewski” pod nim, wyrównany do prawej (ten sam układ co AdminDesk)."""
+    from PIL import ImageFont
+
+    znak = kolor(render("logo.svg", 4000), rgb)
+    znak.thumbnail((height * 10, height), Image.LANCZOS)
+    font = ImageFont.truetype(PODPIS_FONT, max(9, round(height * 0.233)))
+    _, _, right, bottom = font.getbbox(PODPIS)
+    gap = round(height * 0.07)
+    im = Image.new("RGBA", (max(znak.width, right), znak.height + gap + bottom), (0, 0, 0, 0))
+    im.alpha_composite(znak, (im.width - znak.width, 0))
+    ImageDraw.Draw(im).text((im.width - right, znak.height + gap), PODPIS, font=font, fill=rgb + (230,))
+    return im.crop(im.getbbox())
+
+
 def wix_bitmapy(out):
     out.mkdir(parents=True, exist_ok=True)
     dlg = Image.new("RGB", (493, 312), (255, 255, 255))  # lewy pas 164 px na grafikę, reszta na tekst WiX
     dlg.paste(TLO[:3], (0, 0, 164, 312))
-    ik = ikona(120)
-    dlg.paste(ik, ((164 - 120) // 2, 60), ik)
+    lg = logo((255, 255, 255), 64)
+    lg.thumbnail((140, 200), Image.LANCZOS)
+    dlg.paste(lg, ((164 - lg.width) // 2, 70), lg)
     dlg.save(out / "WixUIDialogBmp.bmp")
-    ban = Image.new("RGB", (493, 58), (255, 255, 255))  # tekst WiX po lewej, ikona po prawej
-    ik = ikona(46)
-    ban.paste(ik, (493 - 46 - 8, 6), ik)
+    ban = Image.new("RGB", (493, 58), (255, 255, 255))  # tekst WiX po lewej, logo po prawej
+    lg = logo((0, 0, 0), 34)
+    lg.thumbnail((140, 50), Image.LANCZOS)
+    ban.paste(lg, (493 - lg.width - 8, (58 - lg.height) // 2), lg)
     ban.save(out / "WixUIBannerBmp.bmp")
 
 

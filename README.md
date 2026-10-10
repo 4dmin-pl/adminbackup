@@ -14,6 +14,15 @@ Instalacja klienta bez pytań (np. przez GPO/RMM):
 msiexec /i AdminBackup-x64.msi /qn
 ```
 
+### Konfiguracja bez udziału klienta
+- **Serwer w tej samej sieci LAN** — nic nie trzeba: klient sam znajduje serwer i jest dodawany automatycznie.
+- **Serwer zdalny (internet)** — połóż plik `adminbackup.ini` w tym samym folderze co `AdminBackup-x64.msi`
+  (wzór: `adminbackup-wzor.ini` w każdym wydaniu). Instalator skopiuje go jako `initial_settings.cfg`, usługa przy
+  pierwszym starcie wczyta ustawienia i **usunie plik** (razem z kluczem). Dane (nazwa komputera + klucz) z panelu
+  serwera klienta: *Status → Dodaj nowego klienta internetowego*. Plik działa tylko przy pierwszej instalacji
+  (gdy klient nie ma jeszcze ustawień). Z archiwum ZIP najpierw wypakuj oba pliki — uruchomienie MSI z podglądu ZIP
+  nie widzi pliku obok.
+
 Serwer:
 ```
 docker run -d --name adminbackup-server --restart unless-stopped \

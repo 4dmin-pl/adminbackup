@@ -2,6 +2,11 @@
 	<?include adminbackup.wxi?>
 	<Package Name="AdminBackup" Language="1033" Version="$(var.Version)" Manufacturer="A.D.M.I.N (4dmin.pl)" UpgradeCode="4C57D549-8A81-5E12-B12D-740EBB38D0C8" InstallerVersion="301"><SummaryInformation Description="AdminBackup - kopie zapasowe A.D.M.I.N" Manufacturer="A.D.M.I.N (4dmin.pl)" />
 			 
+	<!-- SourceDir (katalog z MSI) dla CopyFile adminbackup.ini; tylko przy instalacji, by naprawa nie pytała o nośnik -->
+	<InstallExecuteSequence>
+		<ResolveSource After="CostInitialize" Condition="NOT Installed" />
+	</InstallExecuteSequence>
+
 	<MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
 	
     <Media Id="1" Cabinet="urbackup.cab" EmbedCab="yes" />
@@ -61,6 +66,8 @@
 					<File Id="crt_vcruntime140_dll" DiskId="1" Name="vcruntime140.dll" Source="$(var.CrtDir)\vcruntime140.dll" />
 					<File Id="crt_vcruntime140_1_dll" DiskId="1" Name="vcruntime140_1.dll" Source="$(var.CrtDir)\vcruntime140_1.dll" />
 					<File Id="crt_vcruntime140_threads_dll" DiskId="1" Name="vcruntime140_threads.dll" Source="$(var.CrtDir)\vcruntime140_threads.dll" />
+					<!-- adminbackup.ini obok MSI -> initial_settings.cfg: usługa wczytuje go przy 1. starcie i usuwa (dllmain.cpp). Brak pliku = pomijane (LAN). -->
+					<CopyFile Id="AdminBackupIni" SourceProperty="SourceDir" SourceName="adminbackup.ini" DestinationDirectory="URBACKUPDIR" DestinationName="initial_settings.cfg" />
 					
 			</Component>
 			

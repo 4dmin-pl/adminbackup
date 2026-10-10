@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["brand.py", "grafika/**", "installer/**", ".github/workflows/klient.yml"]
+    paths: ["brand.py", "grafika/**", "installer/**", "adminbackup-wzor.ini", ".github/workflows/klient.yml"]
     tags: ["v*"]
 
 env:
@@ -52,6 +52,7 @@ jobs:
           Remove-Item out\*.wixpdb
           # stała nazwa pod link na stronie: .../releases/latest/download/AdminBackup-x64.msi
           Copy-Item out\AdminBackup-$env:URBACKUP_VERSION-x64.msi out\AdminBackup-x64.msi
+          Copy-Item adminbackup-wzor.ini out\
           Get-FileHash out\*.msi -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Out-File -Encoding ascii out\SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4

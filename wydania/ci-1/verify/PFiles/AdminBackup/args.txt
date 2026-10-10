@@ -1,0 +1,15 @@
+--plugin
+fileservplugin.dll
+--plugin
+fsimageplugin.dll
+--plugin
+cryptoplugin.dll
+--plugin
+urbackup.dll
+--no-server
+--logfile
+debug.log
+--loglevel
+warn
+--allow_restore
+default
